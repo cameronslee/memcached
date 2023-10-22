@@ -969,6 +969,21 @@ enum delta_result_type add_delta(LIBEVENT_THREAD *t, const char *key,
     return ret;
 }
 
+/* MULT */
+enum delta_result_type mult_delta(LIBEVENT_THREAD *t, const char *key,
+                                 const size_t nkey, 
+                                 const int64_t delta, char *buf,
+                                 uint64_t *cas) {
+    enum delta_result_type ret;
+    uint32_t hv;
+
+    hv = hash(key, nkey);
+    item_lock(hv);
+    ret = do_mult_delta(t, key, nkey, delta, buf, cas, hv, NULL);
+    item_unlock(hv);
+    return ret;
+}
+
 /*
  * Stores an item in the cache (high level, obeys set/add/replace semantics)
  */
