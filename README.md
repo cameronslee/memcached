@@ -1,3 +1,21 @@
+# Hack of Memcached: Implement MULT
+Got the idea from [this article](https://quuxplusone.github.io/blog/2022/01/06/memcached-interview/) to implement a 'MULT' function 
+as a fun lil challange
+
+Became a better grepper bc this code base is gigantic and also LLDB is [schway](https://www.quora.com/What-does-Nora-mean-in-The-Flash-when-she-says-schway#:~:text=The%20word%20“Schway”%20is%20a,a%20substitute%20for%20those%20words.)
+
+Works just like incr and decr, no slab test stats implemented though (out of scope)
+
+```
+// Usage
+>> set age 0 3600 2
+>> 20
+STORED
+>> mult age 2
+40
+```
+
+
 # Memcached
 
 Memcached is a high performance multithreaded event-based key/value cache
