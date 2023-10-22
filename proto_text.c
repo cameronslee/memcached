@@ -2136,6 +2136,47 @@ static void process_arithmetic_command(conn *c, token_t *tokens, const size_t nt
     }
 }
 
+/* MULT */
+static void process_mult_command(conn *c, token_t *tokens, const size_t ntokens) {
+    char temp[INCR_MAX_STORAGE_LEN];
+    uint64_t delta;
+    char *key;
+    size_t nkey;
+
+    assert(c != NULL);
+
+    set_noreply_maybe(c, tokens, ntokens);
+
+    if (tokens[KEY_TOKEN].length > KEY_MAX_LENGTH) {
+        out_string(c, "CLIENT_ERROR bad command line format");
+        return;
+    }
+
+    key = tokens[KEY_TOKEN].value;
+    nkey = tokens[KEY_TOKEN].length;
+
+    if (!safe_strtoull(tokens[2].value, &delta)) {
+        out_string(c, "CLIENT_ERROR invalid numeric delta argument");
+        return;
+    }
+
+    switch(mult_delta(c->thread, key, nkey, delta, temp, NULL)) {
+    case OK:
+        out_string(c, temp);
+        break;
+    case NON_NUMERIC:
+        out_string(c, "CLIENT_ERROR cannot multiply non-numeric value");
+        break;
+    case EOM:
+        out_of_memory(c, "SERVER_ERROR out of memory");
+        break;
+    case DELTA_ITEM_NOT_FOUND:
+        out_string(c, "NOT_FOUND");
+        break;
+    case DELTA_ITEM_CAS_MISMATCH:
+        break; /* Should never get here */
+    }
+}
 
 static void process_delete_command(conn *c, token_t *tokens, const size_t ntokens) {
     char *key;
@@ -2901,6 +2942,14 @@ void process_command_ascii(conn *c, char *command) {
         } else {
             out_string(c, "ERROR");
         }
+    /* MULT */
+    } else if (first == 'm') {
+      if (strcmp(tokens[COMMAND_TOKEN].value, "mult") == 0) {
+        WANT_TOKENS_OR(ntokens, 4, 5);
+        process_mult_command(c, tokens, ntokens);
+      } else {
+        out_string(c, "ERROR");
+      }
     } else if (first == 'd') {
         if (strcmp(tokens[COMMAND_TOKEN].value, "delete") == 0) {
 
